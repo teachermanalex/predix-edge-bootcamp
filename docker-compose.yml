@@ -1,0 +1,23 @@
+version: "3.0"
+
+services:
+  predix_edge_broker:
+    image: "predix-edge-mosquitto-amd64:latest"
+    ports:
+      - 1883:1883
+
+  opcua:
+    image: "protocol-adapter-opcua-amd64:latest"
+    environment:
+      config: "/config/config-opcua.json"
+  
+  edge-app:
+    image: "my-edge-app:1.0.0"
+
+  cloud_gateway:
+    image: "cloud-gateway-amd64:latest"
+    environment:
+      config: "/config/config-cloud-gateway.json"
+    env_file:
+      - /etc/environment
+

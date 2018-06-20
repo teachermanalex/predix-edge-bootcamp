@@ -1,0 +1,31 @@
+version: "3.0"
+
+services:
+  predix_edge_broker:
+    image: "predix-edge-mosquitto-amd64:latest"
+    hostname: 127.0.0.1
+    ports:
+      - 1883:1883
+
+  opcua:
+    image: "protocol-adapter-opcua-amd64:latest"
+    environment:
+      config: "/config/config-opcua.json"
+    volumes:
+      - ./config:/config
+      - ./data:/data
+  
+  edge-app:
+    image: "my-edge-app:1.0.0"
+
+  cloud_gateway:
+    image: "cloud-gateway-amd64:latest"
+    environment:
+      config: "/config/config-cloud-gateway.json"
+      https_proxy: "http://proxy-src.research.ge.com:8080"
+    dns: 
+      - "10.220.220.220"
+    volumes:
+      - ./config:/config
+      - ./data:/data
+      - ./data:/edge-agent
