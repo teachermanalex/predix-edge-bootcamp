@@ -111,68 +111,61 @@ getPredixScripts
 getCurrentRepo
 
 echo "quickstart_args=$QUICKSTART_ARGS"
+export TIMESERIES_CHART_ONLY="true"
 source $PREDIX_SCRIPTS/bash/quickstart.sh $QUICKSTART_ARGS
 
 
 __append_new_line_log "Successfully completed $APP_NAME installation!" "$quickstartLogDir"
 __append_new_line_log "" "$quickstartLogDir"
 
-px set-env $INSTANCE_PREPENDER-predix-webapp-starter timeSeriesOnly true
+#px set-env $FRONT_END_POLYMER_SEED_APP_NAME timeSeriesOnly true
 
-px restage $INSTANCE_PREPENDER-predix-webapp-starter
+#px restage $FRONT_END_POLYMER_SEED_APP_NAME
+
+# Automagically open the application in browser, based on OS
+  if [[ $SKIP_BROWSER == 0 ]]; then
+    getUrlForAppName $FRONT_END_POLYMER_SEED_APP_NAME apphost "https"
+    case "$(uname -s)" in
+       Darwin)
+         # OSX
+         open $apphost
+         ;;
+       CYGWIN*|MINGW32*|MINGW64*|MSYS*)
+         # Windows
+         start "" $apphost
+         ;;
+    esac
+fi
 
 pwd
 cd $REPO_NAME
 
-#echo "Cleaning (stop and rm) up Docker Containers"
-#for container in $(docker ps -a | tail -n +2 | awk -F" " '{print $1}');
-#do
-#  echo "container : $container"
-#  docker stop $container && docker rm $container
-#done
-
-#for image in $(docker images  -a | tail -n +2 | awk -F" " '{print $3}');
-#do
-#  echo "image $image"
-#  docker rmi -f $image
-#done
-
-#for image in $(docker service ls | tail -n +2 | awk -F" " '{print $1}');
-#do
-#  echo "service $image"
-#  docker service rm $image
-#done
+docker pull dtr.predix.io/predix-edge/predix-edge-mosquitto-amd64:latest
+docker pull dtr.predix.io/predix-edge/protocol-adapter-opcua-amd64:latest
+docker pull dtr.predix.io/predix-edge/cloud-gateway-timeseries-amd64:latest
 
 docker ps
 
 docker images
 
-docker service ls
-
-docker login dtr.predix.io -u edge-user -p ",cwB^[/]2WQDXK&_"
-
-docker pull dtr.predix.io/predix-edge/predix-edge-mosquitto-amd64:latest
-docker pull dtr.predix.io/predix-edge/protocol-adapter-opcua-amd64:latest
-docker pull dtr.predix.io/predix-edge/cloud-gateway-amd64:latest
-
-docker tag dtr.predix.io/predix-edge/predix-edge-mosquitto-amd64:latest predix-edge-mosquitto-amd64:latest
-docker tag dtr.predix.io/predix-edge/protocol-adapter-opcua-amd64:latest protocol-adapter-opcua-amd64:latest
-docker tag dtr.predix.io/predix-edge/cloud-gateway-amd64:latest cloud-gateway-amd64:latest
-
 pwd
 ls
 
 __find_and_replace ".*predix_zone_id\":.*" "          \"predix_zone_id\": \"$TIMESERIES_ZONE_ID\"," "config/config-cloud-gateway.json" "$quickstartLogDir"
-__find_and_replace ".*proxy_url\":.*" "          \"proxy_url\": \"$http_proxy\"," "config/config-cloud-gateway.json" "$quickstartLogDir"
-docker build -t my-edge-app:1.0.0 .
-docker images
+__find_and_replace ".*proxy_url\":.*" "          \"proxy_url\": \"$http_proxy\"" "config/config-cloud-gateway.json" "$quickstartLogDir"
 
 ./get-access-token.sh $UAA_CLIENTID_GENERIC $UAA_CLIENTID_GENERIC_SECRET $TRUSTED_ISSUER_ID
+
 cat data/access_token
 
-docker stack deploy --compose-file docker-compose-dev.yml my-edge-app
+pwd
+ls
 
-#docker-compose -f docker-compose-dev.yml build
-#docker-compose -f docker-compose-dev.yml up -d
+docker build -t my-edge-app:1.0.0 . --build-arg http_proxy --build-arg https_proxy
 
-#open https://svc-nodejs-starter.run.aws-usw02-pr.ice.predix.io
+docker stack deploy --compose-file docker-compose-build.yml my-edge-app
+
+docker service ls
+
+__append_new_line_log "Successfully completed Edge to Cloud App installation!" "$quickstartLogDir"
+__append_new_line_log "" "$logDir"

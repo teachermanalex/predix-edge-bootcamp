@@ -7,12 +7,12 @@ var mqtt = require('mqtt')
 console.log("app starting");
 
 //connect to the predix-edge-broker - use an environment variable if devloping locally
-var predix_edge_broker = process.env.predix_edge_broker || 'predix_edge_broker';
+var predix_edge_broker = process.env.predix_edge_broker || 'predix-edge-broker';
 
 var client  = mqtt.connect('mqtt://' + predix_edge_broker);
 
 client.on('connect', function () {
-  console.log("connected to predix_edge_broker");
+  console.log("connected to "+predix_edge_broker);
 
   //subscribe to the topic being published by the opc-ua container
   client.subscribe('app_data');
@@ -21,7 +21,7 @@ client.on('connect', function () {
 //handle each message as it is recieved
 client.on('message', function (topic, message) {
 
-  console.log("message recieved from predix_edge_broker: " + message.toString());
+  console.log("message recieved from "+predix_edge_broker+" : " + message.toString());
 
   //add your app logic all goes below here
 
@@ -35,17 +35,7 @@ client.on('message', function (topic, message) {
       var value = item.body[i].datapoints[0][1];
 
       //scale the tag value * 1000
-      //value = value * 1000;
-      if (tagName.indexOf("FLOAT1") != -1) {
-        if (value < 1) {
-            item.body[i].datapoints[0][1] = Math.floor(value*10);
-        }else {
-          item.body[i].datapoints[0][1] = Math.floor(value);
-        }
-      }else{
-        item.body[i].datapoints[0][1] = value;
-      }
-
+      item.body[i].datapoints[0][1] = value * 100;
 
       //give the scaled tag a new name
       //item.body[0].name = tagName + '.scaled_x_1000';
@@ -55,6 +45,6 @@ client.on('message', function (topic, message) {
       //publish the tag back to the broker on the topic the cloud-gateway container is subscribing to
       client.publish("timeseries_data", scaled_item);
 
-      console.log("published scaled item to predix_edge_broker: " + scaled_item);
+      console.log("published scaled item to predix-edge-broker: " + scaled_item);
   }
 });

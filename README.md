@@ -14,12 +14,12 @@ You will also need the *UAA URL*, *ClientID* and *Secret* for the Predix Cloud T
 
 To get started devloping locally you will need to pull the core Predix Edge Docker images onto your local machine.  
 
-This will first require you to logon to the Predix Docker Trusted Registry (DTR).  We are supplying all devlopers with the temporary credentials listed below.
+This will first require you to logon to the Predix Docker Trusted Registry (DTR).  We are supplying all devlopers with the temporary credentials listed below. Please connect with Predix DTR team to get the credentials
 
 ```bash
 $ docker login dtr.predix.io
-$ Username: edge-user
-$ Password: ,cwB^[/]2WQDXK&_
+$ Username: <dtr user name>
+$ Password: <dtr user password>
 ```
 
 Now pull in the images our app will use.
@@ -167,7 +167,7 @@ This file is used by the Cloud Gateway service and contains properties indicatin
     "mqtt": {
       "type": "cdpin",
       "config": {
-        "transport_addr": "mqtt-tcp://predix_edge_broker",
+        "transport_addr": "mqtt-tcp://predix-edge-broker",
         "node_ref": "timeseries_data",
         "method": "sub",
         "log_name":"gateway_mqtt_source",

@@ -7,16 +7,24 @@
             "log_level": "debug",
             "data_map": [
                 {
-                  "alias": "Compressor-2017:DischargePressure",
-                  "id": "ns=2;s=Simulator.Device1.DOUBLE1"
-                },
-                {
-                  "alias": "Compressor-2017:SuctionPressure",
+                  "alias": "Compressor-2017:CompressionRatio",
                   "id": "ns=2;s=Simulator.Device1.FLOAT1"
                 },
                 {
+                  "alias": "Compressor-2017:DischargePressure",
+                  "id": "ns=2;s=Simulator.Device1.FLOAT2"
+                },
+                {
+                  "alias": "Compressor-2017:SuctionPressure",
+                  "id": "ns=2;s=Simulator.Device1.FLOAT3"
+                },
+                {
                   "alias": "Compressor-2017:Velocity",
-                  "id": "ns=2;s=Simulator.Device1.DOUBLE2"
+                  "id": "ns=2;s=Simulator.Device1.FLOAT4"
+                },
+                {
+                  "alias": "Compressor-2017:Temperature",
+                  "id": "ns=2;s=Simulator.Device1.FLOAT5"
                 }
             ]
         }
@@ -32,7 +40,7 @@
       "mqtt": {
         "type": "cdpout",
         "config": {
-          "transport_addr": "mqtt-tcp://predix_edge_broker",
+          "transport_addr": "mqtt-tcp://predix-edge-broker",
           "node_ref": "app_data",
           "method": "pub",
           "log_level": "debug",

@@ -1,10 +1,6 @@
 # start with the Predix Edge base alpine image
 FROM dtr.predix.io/predix-edge/alpine-amd64
 
-# set proxies your machine requires to access the Internet - remove these if not needed
-ENV http_proxy=http://proxy-src.research.ge.com:8080
-ENV https_proxy=http://proxy-src.research.ge.com:8080
-
 #install nodejs into the base image
 RUN apk update && apk add nodejs
 
