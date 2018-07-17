@@ -150,11 +150,12 @@ docker images
 
 pwd
 ls
-
+echo "TIMESERIES_ZONE_ID : $TIMESERIES_ZONE_ID"
 __find_and_replace ".*predix_zone_id\":.*" "          \"predix_zone_id\": \"$TIMESERIES_ZONE_ID\"," "config/config-cloud-gateway.json" "$quickstartLogDir"
+echo "proxy_url : $http_proxy"
 __find_and_replace ".*proxy_url\":.*" "          \"proxy_url\": \"$http_proxy\"" "config/config-cloud-gateway.json" "$quickstartLogDir"
 
-./get-access-token.sh $UAA_CLIENTID_GENERIC $UAA_CLIENTID_GENERIC_SECRET $TRUSTED_ISSUER_ID
+./scripts/get-access-token.sh $UAA_CLIENTID_GENERIC $UAA_CLIENTID_GENERIC_SECRET $TRUSTED_ISSUER_ID
 
 cat data/access_token
 
@@ -162,6 +163,12 @@ pwd
 ls
 
 docker build -t my-edge-app:1.0.0 . --build-arg http_proxy --build-arg https_proxy
+
+docker stack deploy --compose-file docker-compose_services.yml my-edge-app
+
+sleep 10
+
+docker service ls
 
 docker stack deploy --compose-file docker-compose-build.yml my-edge-app
 
