@@ -3,7 +3,7 @@ HOME_DIR=$(pwd)
 
 #!/bin/bash
 set -e
-
+RUN_QUICKSTART=1
 function local_read_args() {
   while (( "$#" )); do
   opt="$1"
@@ -12,6 +12,9 @@ function local_read_args() {
       PRINT_USAGE=1
       QUICKSTART_ARGS="$SCRIPT $1"
       break
+    ;;
+    --no-quickstart)
+      RUN_QUICKSTART=0
     ;;
     -b|--branch)
       BRANCH="$2"
@@ -114,65 +117,45 @@ echo "quickstart_args=$QUICKSTART_ARGS"
 export TIMESERIES_CHART_ONLY="true"
 source $PREDIX_SCRIPTS/bash/quickstart.sh $QUICKSTART_ARGS
 
+if [[ "$RUN_QUICKSTART" == "1" ]]; then
+  pwd
+  cd $REPO_NAME
 
-__append_new_line_log "Successfully completed $APP_NAME installation!" "$quickstartLogDir"
-__append_new_line_log "" "$quickstartLogDir"
+  docker pull dtr.predix.io/predix-edge/predix-edge-mosquitto-amd64:latest
+  docker pull dtr.predix.io/predix-edge/protocol-adapter-opcua-amd64:latest
+  docker pull dtr.predix.io/predix-edge/cloud-gateway-timeseries-amd64:latest
 
-#px set-env $FRONT_END_POLYMER_SEED_APP_NAME timeSeriesOnly true
+  docker ps
 
-#px restage $FRONT_END_POLYMER_SEED_APP_NAME
+  docker images
 
-# Automagically open the application in browser, based on OS
-  if [[ $SKIP_BROWSER == 0 ]]; then
-    getUrlForAppName $FRONT_END_POLYMER_SEED_APP_NAME apphost "https"
-    case "$(uname -s)" in
-       Darwin)
-         # OSX
-         open $apphost
-         ;;
-       CYGWIN*|MINGW32*|MINGW64*|MSYS*)
-         # Windows
-         start "" $apphost
-         ;;
-    esac
+  pwd
+  ls
+  echo "TIMESERIES_ZONE_ID : $TIMESERIES_ZONE_ID"
+  __find_and_replace ".*predix_zone_id\":.*" "          \"predix_zone_id\": \"$TIMESERIES_ZONE_ID\"," "config/config-cloud-gateway.json" "$quickstartLogDir"
+  echo "proxy_url : $http_proxy"
+  __find_and_replace ".*proxy_url\":.*" "          \"proxy_url\": \"$http_proxy\"" "config/config-cloud-gateway.json" "$quickstartLogDir"
+
+  ./scripts/get-access-token.sh $UAA_CLIENTID_GENERIC $UAA_CLIENTID_GENERIC_SECRET $TRUSTED_ISSUER_ID
+
+  cat data/access_token
+
+  pwd
+  ls
+
+  docker build -t my-edge-app:1.0.0 . --build-arg http_proxy --build-arg https_proxy
+
+  docker stack deploy --compose-file docker-compose_services.yml my-edge-app
+
+  sleep 10
+
+  docker service ls
+
+  docker stack deploy --compose-file docker-compose-build.yml my-edge-app
+
+  docker service ls
 fi
 
-pwd
-cd $REPO_NAME
-
-docker pull dtr.predix.io/predix-edge/predix-edge-mosquitto-amd64:latest
-docker pull dtr.predix.io/predix-edge/protocol-adapter-opcua-amd64:latest
-docker pull dtr.predix.io/predix-edge/cloud-gateway-timeseries-amd64:latest
-
-docker ps
-
-docker images
-
-pwd
-ls
-echo "TIMESERIES_ZONE_ID : $TIMESERIES_ZONE_ID"
-__find_and_replace ".*predix_zone_id\":.*" "          \"predix_zone_id\": \"$TIMESERIES_ZONE_ID\"," "config/config-cloud-gateway.json" "$quickstartLogDir"
-echo "proxy_url : $http_proxy"
-__find_and_replace ".*proxy_url\":.*" "          \"proxy_url\": \"$http_proxy\"" "config/config-cloud-gateway.json" "$quickstartLogDir"
-
-./scripts/get-access-token.sh $UAA_CLIENTID_GENERIC $UAA_CLIENTID_GENERIC_SECRET $TRUSTED_ISSUER_ID
-
-cat data/access_token
-
-pwd
-ls
-
-docker build -t my-edge-app:1.0.0 . --build-arg http_proxy --build-arg https_proxy
-
-docker stack deploy --compose-file docker-compose_services.yml my-edge-app
-
-sleep 10
-
-docker service ls
-
-docker stack deploy --compose-file docker-compose-build.yml my-edge-app
-
-docker service ls
 
 __append_new_line_log "Successfully completed Edge to Cloud App installation!" "$quickstartLogDir"
 __append_new_line_log "" "$logDir"
