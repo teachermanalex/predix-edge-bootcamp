@@ -184,7 +184,7 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
   PREDIX_EDGE_SERVICES_TIMESERIES_COUNT=$(docker service ls -f "name=predix-edge-services_cloud_gateway_timeseries" -q | wc -l | awk '{print $1}')
   echo "PREDIX_EDGE_SERVICES_TIMESERIES_COUNT : $PREDIX_EDGE_SERVICES_TIMESERIES_COUNT"
   if [[ $PREDIX_EDGE_SERVICES_TIMESERIES_COUNT -eq 0 ]]; then
-    docker stack deploy --compose-file docker/docker-compose-edge-opcua.yml predix-edge-services
+    docker stack deploy --compose-file docker/cloud_gateway_timeseries/docker-compose.yml predix-edge-services
     echo "Predix Edge Cloud Gateway Service service started"
   else
     echo "Predix Edge Cloud Gateway Service service already running"
