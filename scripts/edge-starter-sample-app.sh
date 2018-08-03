@@ -4,6 +4,7 @@ HOME_DIR=$(pwd)
 #!/bin/bash
 set -e
 RUN_QUICKSTART=1
+SKIP_PREDIX_SERVICES="false"
 function local_read_args() {
   while (( "$#" )); do
   opt="$1"
@@ -23,6 +24,9 @@ function local_read_args() {
     ;;
     -o|--override)
       QUICKSTART_ARGS=" $SCRIPT"
+    ;;
+    --skip-predix-services)
+      SKIP_PREDIX_SERVICES="true"
     ;;
     --skip-setup)
       SKIP_SETUP=true
@@ -46,7 +50,11 @@ PRINT_USAGE=0
 SKIP_SETUP=false
 #ASSET_MODEL="-amrmd predix-ui-seed/server/sample-data/predix-asset/asset-model-metadata.json predix-ui-seed/server/sample-data/predix-asset/asset-model.json"
 SCRIPT="-script build-basic-app.sh -script-readargs build-basic-app-readargs.sh"
-QUICKSTART_ARGS=" -uaa -ts -psts $SCRIPT"
+if [[ "$SKIP_PREDIX_SERVICES" == "true" ]]; then
+  QUICKSTART_ARGS=" $SCRIPT"
+else
+  QUICKSTART_ARGS=" -uaa -ts -psts $SCRIPT"
+fi
 VERSION_JSON="version.json"
 PREDIX_SCRIPTS=predix-scripts
 REPO_NAME=predix-edge-sample-scaler-nodejs
@@ -131,31 +139,68 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
 
   pwd
   ls
+  if [[ "$TIMESERIES_INGEST_URI" == "" ]]; then
+    getTimeseriesIngestUriFromInstance $TIMESERIES_INSTANCE_NAME
+  fi
+  if [[ "$TIMESERIES_QUERY_URI" == "" ]]; then
+    getTimeseriesQueryUriFromInstance $TIMESERIES_INSTANCE_NAME
+  fi
+  if [[ "$TIMESERIES_ZONE_ID" == "" ]]; then
+    getTimeseriesZoneIdFromInstance $TIMESERIES_INSTANCE_NAME
+  fi
+  if [[ "$UAA_URL" == "" ]]; then
+    getUaaUrlFromInstance $UAA_INSTANCE_NAME
+  fi
   echo "TIMESERIES_ZONE_ID : $TIMESERIES_ZONE_ID"
   __find_and_replace ".*predix_zone_id\":.*" "          \"predix_zone_id\": \"$TIMESERIES_ZONE_ID\"," "config/config-cloud-gateway.json" "$quickstartLogDir"
   echo "proxy_url : $http_proxy"
   __find_and_replace ".*proxy_url\":.*" "          \"proxy_url\": \"$http_proxy\"" "config/config-cloud-gateway.json" "$quickstartLogDir"
 
-  ./scripts/get-access-token.sh $UAA_CLIENTID_GENERIC $UAA_CLIENTID_GENERIC_SECRET $TRUSTED_ISSUER_ID
+  ./scripts/get-access-token.sh $UAA_CLIENTID_GENERIC $UAA_CLIENTID_GENERIC_SECRET $UAA_URL
 
   cat data/access_token
 
   pwd
   ls
+  docker service ls -f "name=predix-edge-broker_predix-edge-broker"
 
-  docker build -t my-edge-app:1.0.0 . --build-arg http_proxy --build-arg https_proxy
-
-  docker stack deploy --compose-file docker-compose_services.yml my-edge-app
+  PREDIX_EDGE_BROKER_COUNT=$(docker service ls -f "name=predix-edge-broker_predix-edge-broker" -q | wc -l | awk '{print $1}')
+  echo "PREDIX_EDGE_BROKER_COUNT : $PREDIX_EDGE_BROKER_COUNT"
+  if [[ $PREDIX_EDGE_BROKER_COUNT -eq 0 ]]; then
+    echo "Predix Edge Broker service not started"
+    docker stack deploy --compose-file docker/predix-edge-broker/docker-compose.yml predix-edge-broker
+    echo "Predix Edge Broker service started"
+  else
+    echo "Predix Edge Broker service already running"
+  fi
+  PREDIX_EDGE_SERVICES_OPCUA_COUNT=$(docker service ls -f "name=predix-edge-services_opcua" -q | wc -l | awk '{print $1}')
+  echo "PREDIX_EDGE_SERVICES_OPCUA_COUNT : $PREDIX_EDGE_SERVICES_OPCUA_COUNT"
+  if [[ $PREDIX_EDGE_SERVICES_OPCUA_COUNT -eq 0 ]]; then
+    docker stack deploy --compose-file docker/opcua/docker-compose.yml predix-edge-services
+    echo "Predix Edge OPCUA Adapter Service service started"
+  else
+    echo "Predix Edge OPCUA Adapter Service service already running"
+  fi
+  PREDIX_EDGE_SERVICES_TIMESERIES_COUNT=$(docker service ls -f "name=predix-edge-services_cloud_gateway_timeseries" -q | wc -l | awk '{print $1}')
+  echo "PREDIX_EDGE_SERVICES_TIMESERIES_COUNT : $PREDIX_EDGE_SERVICES_TIMESERIES_COUNT"
+  if [[ $PREDIX_EDGE_SERVICES_TIMESERIES_COUNT -eq 0 ]]; then
+    docker stack deploy --compose-file docker/docker-compose-edge-opcua.yml predix-edge-services
+    echo "Predix Edge Cloud Gateway Service service started"
+  else
+    echo "Predix Edge Cloud Gateway Service service already running"
+  fi
 
   sleep 10
-
   docker service ls
+
+  docker build -t my-edge-app:1.0.0 . --build-arg http_proxy --build-arg https_proxy
 
   docker stack deploy --compose-file docker-compose-build.yml my-edge-app
 
   docker service ls
 fi
 
-
+cat $SUMMARY_TEXTFILE
+__append_new_line_log "" "$logDir"
 __append_new_line_log "Successfully completed Edge to Cloud App installation!" "$quickstartLogDir"
 __append_new_line_log "" "$logDir"

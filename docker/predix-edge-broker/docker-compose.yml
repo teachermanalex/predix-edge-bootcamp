@@ -7,6 +7,11 @@ services:
   predix-edge-broker:
     image: "dtr.predix.io/predix-edge/predix-edge-mosquitto-amd64:latest"
     hostname: 127.0.0.1
+    networks:
+      - net
     ports:
       - 1883:1883
       - 9001:9001 # Websocket port
+networks:
+  net:
+    driver: overlay
