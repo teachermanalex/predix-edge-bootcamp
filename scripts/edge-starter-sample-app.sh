@@ -3,6 +3,7 @@ HOME_DIR=$(pwd)
 
 #!/bin/bash
 set -e
+
 RUN_QUICKSTART=1
 SKIP_PREDIX_SERVICES="false"
 function local_read_args() {
@@ -16,6 +17,9 @@ function local_read_args() {
     ;;
     --no-quickstart)
       RUN_QUICKSTART=0
+    ;;
+    -i)
+      INSTANCE_PREPENDER="$2"
     ;;
     -b|--branch)
       BRANCH="$2"
@@ -50,23 +54,23 @@ PRINT_USAGE=0
 SKIP_SETUP=false
 #ASSET_MODEL="-amrmd predix-ui-seed/server/sample-data/predix-asset/asset-model-metadata.json predix-ui-seed/server/sample-data/predix-asset/asset-model.json"
 SCRIPT="-script build-basic-app.sh -script-readargs build-basic-app-readargs.sh"
-if [[ "$SKIP_PREDIX_SERVICES" == "true" ]]; then
-  QUICKSTART_ARGS=" $SCRIPT"
-else
-  QUICKSTART_ARGS=" -uaa -ts -psts $SCRIPT"
-fi
 VERSION_JSON="version.json"
 PREDIX_SCRIPTS=predix-scripts
 REPO_NAME=predix-edge-sample-scaler-nodejs
 SCRIPT_NAME="edge-starter-sample-app.sh"
 APP_DIR="edge-sample-nodejs"
 APP_NAME="Predix Front End Basic App - Node.js Express with UAA, Asset, Time Series"
-TOOLS="Cloud Foundry CLI, Git, Node.js, Maven, Predix CLI"
-TOOLS_SWITCHES="--cf --git --nodejs --maven --predixcli"
+TOOLS="Cloud Foundry CLI, Git, Node.js, Predix CLI"
+TOOLS_SWITCHES="--cf --git --nodejs --predixcli"
 
 local_read_args $@
 IZON_SH="https://raw.githubusercontent.com/PredixDev/izon/$BRANCH/izon.sh"
 VERSION_JSON_URL=https://raw.githubusercontent.com/PredixDev/$REPO_NAME/$BRANCH/version.json
+if [[ "$SKIP_PREDIX_SERVICES" == "true" ]]; then
+  QUICKSTART_ARGS=" -p $SCRIPT"
+else
+  QUICKSTART_ARGS=" -uaa -ts -psts $SCRIPT"
+fi
 
 
 function check_internet() {
@@ -149,15 +153,15 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
     getTimeseriesZoneIdFromInstance $TIMESERIES_INSTANCE_NAME
   fi
   if [[ "$UAA_URL" == "" ]]; then
-    getUaaUrlFromInstance $UAA_INSTANCE_NAME
+    getTrustedIssuerIdFromInstance $UAA_INSTANCE_NAME
   fi
   echo "TIMESERIES_ZONE_ID : $TIMESERIES_ZONE_ID"
   __find_and_replace ".*predix_zone_id\":.*" "          \"predix_zone_id\": \"$TIMESERIES_ZONE_ID\"," "config/config-cloud-gateway.json" "$quickstartLogDir"
   echo "proxy_url : $http_proxy"
   __find_and_replace ".*proxy_url\":.*" "          \"proxy_url\": \"$http_proxy\"" "config/config-cloud-gateway.json" "$quickstartLogDir"
 
-  ./scripts/get-access-token.sh $UAA_CLIENTID_GENERIC $UAA_CLIENTID_GENERIC_SECRET $UAA_URL
-
+  ./scripts/get-access-token.sh $UAA_CLIENTID_GENERIC $UAA_CLIENTID_GENERIC_SECRET $TRUSTED_ISSUER_ID
+  pwd
   cat data/access_token
 
   pwd
@@ -168,34 +172,20 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
   echo "PREDIX_EDGE_BROKER_COUNT : $PREDIX_EDGE_BROKER_COUNT"
   if [[ $PREDIX_EDGE_BROKER_COUNT -eq 0 ]]; then
     echo "Predix Edge Broker service not started"
-    docker stack deploy --compose-file docker/predix-edge-broker/docker-compose.yml predix-edge-broker
+    docker stack deploy --compose-file docker-compose-edge-broker.yml predix-edge-broker
     echo "Predix Edge Broker service started"
   else
     echo "Predix Edge Broker service already running"
   fi
-  PREDIX_EDGE_SERVICES_OPCUA_COUNT=$(docker service ls -f "name=predix-edge-services_opcua" -q | wc -l | awk '{print $1}')
-  echo "PREDIX_EDGE_SERVICES_OPCUA_COUNT : $PREDIX_EDGE_SERVICES_OPCUA_COUNT"
-  if [[ $PREDIX_EDGE_SERVICES_OPCUA_COUNT -eq 0 ]]; then
-    docker stack deploy --compose-file docker/opcua/docker-compose.yml predix-edge-services
-    echo "Predix Edge OPCUA Adapter Service service started"
-  else
-    echo "Predix Edge OPCUA Adapter Service service already running"
-  fi
-  PREDIX_EDGE_SERVICES_TIMESERIES_COUNT=$(docker service ls -f "name=predix-edge-services_cloud_gateway_timeseries" -q | wc -l | awk '{print $1}')
-  echo "PREDIX_EDGE_SERVICES_TIMESERIES_COUNT : $PREDIX_EDGE_SERVICES_TIMESERIES_COUNT"
-  if [[ $PREDIX_EDGE_SERVICES_TIMESERIES_COUNT -eq 0 ]]; then
-    docker stack deploy --compose-file docker/cloud_gateway_timeseries/docker-compose.yml predix-edge-services
-    echo "Predix Edge Cloud Gateway Service service started"
-  else
-    echo "Predix Edge Cloud Gateway Service service already running"
-  fi
+
+  docker stack deploy --compose-file docker-compose-services-local.yml predix-edge-services
 
   sleep 10
   docker service ls
 
   docker build -t my-edge-app:1.0.0 . --build-arg http_proxy --build-arg https_proxy
 
-  docker stack deploy --compose-file docker-compose-build.yml my-edge-app
+  docker stack deploy --compose-file docker-compose.yml edge-to-cloud
 
   docker service ls
 fi
