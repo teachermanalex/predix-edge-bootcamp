@@ -70,7 +70,6 @@ if [[ "$SKIP_PREDIX_SERVICES" == "true" ]]; then
   QUICKSTART_ARGS=" -p $SCRIPT"
 else
   QUICKSTART_ARGS=" -uaa -ts -psts $SCRIPT"
-  QUICKSTART_ARGS=" -uaa -ts "
 fi
 
 
@@ -190,7 +189,11 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
 
   docker build -t my-edge-app:1.0.0 . --build-arg http_proxy --build-arg https_proxy
 
-  docker service ls
+  docker stack ls
+  docker stack services predix-edge-broker
+  docker stack services predix-edge-services
+  docker stack services edge-to-cloud
+  docker ps
 fi
 
 cat $SUMMARY_TEXTFILE
