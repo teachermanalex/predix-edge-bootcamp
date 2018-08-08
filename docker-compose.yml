@@ -1,8 +1,8 @@
 version: "3.0"
 
 services:
-  edge-app:
-    image: "my-edge-app:1.0.0"
+  edge-to-cloud-filter:
+    image: "edge-to-cloud-filter:1.0.0"
     networks:
       - predix-edge-broker_net
 networks:

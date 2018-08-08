@@ -187,7 +187,8 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
     exit 1
   fi
 
-  docker build -t my-edge-app:1.0.0 . --build-arg http_proxy --build-arg https_proxy
+  docker build -t edge-to-cloud-filter:1.0.0 . --build-arg http_proxy --build-arg https_proxy
+  docker stack deploy --compose-file docker-compose.yml edge-to-cloud
 
   docker stack ls
   docker stack services predix-edge-broker

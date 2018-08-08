@@ -9,11 +9,11 @@ console.log("app starting");
 //connect to the predix-edge-broker - use an environment variable if devloping locally
 var predix_edge_broker = process.env.predix_edge_broker || 'predix-edge-broker';
 
+console.log("mqtt connecting to " + predix_edge_broker);
 var client  = mqtt.connect('mqtt://' + predix_edge_broker);
 
 client.on('connect', function () {
-  console.log("connected to "+predix_edge_broker);
-
+  console.log("connected to "+ predix_edge_broker);
   //subscribe to the topic being published by the opc-ua container
   client.subscribe('app_data');
 });
