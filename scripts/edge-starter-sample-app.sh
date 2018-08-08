@@ -70,6 +70,7 @@ if [[ "$SKIP_PREDIX_SERVICES" == "true" ]]; then
   QUICKSTART_ARGS=" -p $SCRIPT"
 else
   QUICKSTART_ARGS=" -uaa -ts -psts $SCRIPT"
+  QUICKSTART_ARGS=" -uaa -ts "
 fi
 
 
@@ -135,7 +136,7 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
 
   set -e
   docker pull dtr.predix.io/predix-edge/predix-edge-mosquitto-amd64:latest
-  docker pull dtr.predix.io/predix-edge/protocol-adapter-opcua-amd64:latest
+  docker pull dtr.predix.io/predix-edge/protocol-adapter-opcua-amd64:1.0.8
   docker pull dtr.predix.io/predix-edge/cloud-gateway-timeseries-amd64:latest
 
   docker ps
@@ -180,13 +181,14 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
   fi
 
   docker stack deploy --compose-file docker-compose-services-local.yml predix-edge-services
-
   sleep 10
-  docker service ls
+  if [[  $(docker service ls -f "name=predix-edge-services" | grep 0/1 | wc -l) == "1" ]]; then
+    docker service ls
+    echo 'Error: One of the services did not launch'
+    exit 1
+  fi
 
   docker build -t my-edge-app:1.0.0 . --build-arg http_proxy --build-arg https_proxy
-
-  docker stack deploy --compose-file docker-compose.yml edge-to-cloud
 
   docker service ls
 fi
