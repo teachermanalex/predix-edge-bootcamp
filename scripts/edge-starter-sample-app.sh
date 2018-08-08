@@ -135,7 +135,7 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
 
   set -e
   docker pull dtr.predix.io/predix-edge/predix-edge-mosquitto-amd64:latest
-  docker pull dtr.predix.io/predix-edge/protocol-adapter-opcua-amd64:1.0.8
+  docker pull dtr.predix.io/predix-edge/protocol-adapter-opcua-amd64:latest
   docker pull dtr.predix.io/predix-edge/cloud-gateway-timeseries-amd64:latest
 
   docker ps
@@ -169,26 +169,28 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
   ls
   docker service ls -f "name=predix-edge-broker_predix-edge-broker"
 
-  PREDIX_EDGE_BROKER_COUNT=$(docker service ls -f "name=predix-edge-broker_predix-edge-broker" -q | wc -l | awk '{print $1}')
-  echo "PREDIX_EDGE_BROKER_COUNT : $PREDIX_EDGE_BROKER_COUNT"
-  if [[ $PREDIX_EDGE_BROKER_COUNT -eq 0 ]]; then
-    echo "Predix Edge Broker service not started"
-    docker stack deploy --compose-file docker-compose-edge-broker.yml predix-edge-broker
-    echo "Predix Edge Broker service started"
-  else
-    echo "Predix Edge Broker service already running"
+  docker stack deploy --compose-file docker-compose-edge-broker.yml predix-edge-broker
+  if [[  $(docker service ls -f "name=predix-edge-broker" | grep 0/1 | wc -l) == "1" ]]; then
+    docker service ls
+    echo 'Error: One of the predix-edge-broker services did not launch'
+    exit 1
   fi
 
   docker stack deploy --compose-file docker-compose-services-local.yml predix-edge-services
   sleep 10
   if [[  $(docker service ls -f "name=predix-edge-services" | grep 0/1 | wc -l) == "1" ]]; then
     docker service ls
-    echo 'Error: One of the services did not launch'
+    echo 'Error: One of the predix-edge-services did not launch'
     exit 1
   fi
 
   docker build -t edge-to-cloud-filter:1.0.0 . --build-arg http_proxy --build-arg https_proxy
   docker stack deploy --compose-file docker-compose.yml edge-to-cloud
+  if [[  $(docker service ls -f "name=edge-to-cloud" | grep 0/1 | wc -l) == "1" ]]; then
+    docker service ls
+    echo 'Error: One of the edge-to-cloud services did not launch'
+    exit 1
+  fi
 
   docker stack ls
   docker stack services predix-edge-broker

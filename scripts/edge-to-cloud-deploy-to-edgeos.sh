@@ -50,7 +50,7 @@ else
   docker pull dtr.predix.io/predix-edge/predix-edge-mosquitto-amd64:latest
 fi
 
-docker pull dtr.predix.io/predix-edge/protocol-adapter-opcua-amd64:1.0.8
+docker pull dtr.predix.io/predix-edge/protocol-adapter-opcua-amd64:latest
 docker pull dtr.predix.io/predix-edge/cloud-gateway-timeseries-amd64:latest
 
 #docker pull my-edge-app:1.0.0
