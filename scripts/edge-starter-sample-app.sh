@@ -133,6 +133,7 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
   pwd
   cd $REPO_NAME
 
+  set -e
   docker pull dtr.predix.io/predix-edge/predix-edge-mosquitto-amd64:latest
   docker pull dtr.predix.io/predix-edge/protocol-adapter-opcua-amd64:latest
   docker pull dtr.predix.io/predix-edge/cloud-gateway-timeseries-amd64:latest
