@@ -28,7 +28,7 @@ client.on('message', function (topic, message) {
   //read the message into a json object
   var item = JSON.parse(message);
 
-  //if the item is equal to the tagName we are loojing for then scale up the value by 1000 and put it back on the broker to be sent to timeseries
+  //if the item is equal to the tagName we are looking for then scale up the value by 1000 and put it back on the broker to be sent to timeseries
   for ( var i=0;i<item.body.length;i++)
   {
       var tagName = item.body[i].name;

@@ -3,28 +3,28 @@
       "opcua": {
         "type": "opcuasubflat",
         "config": {
-            "transport_addr": "opc-tcp://3.39.79.92:53530/OPCUA/SimulationServer",
+            "transport_addr": "opc-tcp://3.39.89.86:49310",
             "log_level": "debug",
             "data_map": [
                 {
-                  "alias": "Compressor-CMMS-Compressor-2018.CompressionRatio",
-                  "id": "ns=5;s=Counter1"
+                  "alias": "Compressor-2017:CompressionRatio",
+                  "id": "ns=2;s=Simulator.Device1.FLOAT1"
                 },
                 {
-                  "alias": "Compressor-CMMS-Compressor-2018.DischargePressure",
-                  "id": "ns=5;s=Expression1"
+                  "alias": "Compressor-2017:DischargePressure",
+                  "id": "ns=2;s=Simulator.Device1.FLOAT2"
                 },
                 {
-                  "alias": "Compressor-CMMS-Compressor-2018.SuctionPressure",
-                  "id": "ns=5;s=Random1"
+                  "alias": "Compressor-2017:SuctionPressure",
+                  "id": "ns=2;s=Simulator.Device1.FLOAT3"
                 },
                 {
-                  "alias": "Compressor-CMMS-Compressor-2018.Velocity",
-                  "id": "ns=5;s=Sawtooth1"
+                  "alias": "Compressor-2017:Velocity",
+                  "id": "ns=2;s=Simulator.Device1.FLOAT4"
                 },
                 {
-                  "alias": "Compressor-CMMS-Compressor-2018.Temperature",
-                  "id": "ns=5;s=Sinusoid1"
+                  "alias": "Compressor-2017:Temperature",
+                  "id": "ns=2;s=Simulator.Device1.FLOAT5"
                 }
             ]
         }

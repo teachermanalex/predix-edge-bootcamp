@@ -67,11 +67,10 @@ local_read_args $@
 IZON_SH="https://raw.githubusercontent.com/PredixDev/izon/$BRANCH/izon.sh"
 VERSION_JSON_URL=https://raw.githubusercontent.com/PredixDev/$REPO_NAME/$BRANCH/version.json
 if [[ "$SKIP_PREDIX_SERVICES" == "true" ]]; then
-  QUICKSTART_ARGS=" -p $SCRIPT"
+  QUICKSTART_ARGS="$QUICKSTART_ARGS -p $SCRIPT"
 else
-  QUICKSTART_ARGS=" -uaa -ts -psts $SCRIPT"
+  QUICKSTART_ARGS="$QUICKSTART_ARGS -uaa -ts -psts $SCRIPT"
 fi
-
 
 function check_internet() {
   set +e
@@ -169,14 +168,14 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
   ls
   docker service ls -f "name=predix-edge-broker_predix-edge-broker"
 
-  docker stack deploy --compose-file docker-compose-edge-broker.yml predix-edge-broker
+  docker stack deploy --with-registry-auth --compose-file docker-compose-edge-broker.yml predix-edge-broker
   if [[  $(docker service ls -f "name=predix-edge-broker" | grep 0/1 | wc -l) == "1" ]]; then
     docker service ls
     echo 'Error: One of the predix-edge-broker services did not launch'
     exit 1
   fi
 
-  docker stack deploy --compose-file docker-compose-services-local.yml predix-edge-services
+  docker stack deploy --with-registry-auth --compose-file docker-compose-services-local.yml predix-edge-services
   sleep 10
   if [[  $(docker service ls -f "name=predix-edge-services" | grep 0/1 | wc -l) == "1" ]]; then
     docker service ls

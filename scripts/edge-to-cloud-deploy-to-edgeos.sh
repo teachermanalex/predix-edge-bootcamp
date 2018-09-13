@@ -71,7 +71,7 @@ fi
 cd ..
 if [[ "$RECREATE_TAR" == "1" || ! -e "images.tar" ]]; then
   echo "Creating a images.tar with required images"
-  docker save -o images.tar my-edge-app:1.0.0 dtr.predix.io/predix-edge/protocol-adapter-opcua-amd64:latest dtr.predix.io/predix-edge/cloud-gateway-timeseries-amd64:latest
+  docker save -o images.tar edge-to-cloud-filter:1.0.0
 fi
 
 if [[ "$RECREATE_TAR" == "1" || ! -e "$HELLO_WORLD_APP" ]]; then

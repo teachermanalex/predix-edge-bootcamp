@@ -23,11 +23,11 @@ mkdir -p /var/lib/edge-agent/app/$EDGE_SERVICES_ID/conf/
 rm -rf /var/lib/edge-agent/app/$EDGE_SERVICES_ID/conf/*
 unzip /mnt/data/downloads/$EDGE_SERVICES_CONFIG -d /var/lib/edge-agent/app/$EDGE_SERVICES_ID/conf/
 
-cd /var/run/edge-agent/access-token
-
-cp /mnt/data/downloads/access_token .
-
-#curl http://localhost/api/v1/applications --unix-socket /var/run/edge-core/edge-core.sock -X POST -F "file=@/mnt/data/downloads/$EDGE_APP" -H "app_name: $APPLICATION_ID"
+if [[ ! -e /var/run/edge-agent/access-token/access_token ]]; then
+  cd /var/run/edge-agent/access-token
+  cp /mnt/data/downloads/access_token .
+  cd /mnt/data/downloads
+fi
 
 /opt/edge-agent/app-deploy --enable-core-api $EDGE_SERVICES_ID /mnt/data/downloads/$EDGE_SERVICES
 
