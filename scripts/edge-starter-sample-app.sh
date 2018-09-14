@@ -49,9 +49,12 @@ function local_read_args() {
   fi
 }
 
+# default settings
 BRANCH="master"
 PRINT_USAGE=0
 SKIP_SETUP=false
+
+IZON_SH="https://raw.githubusercontent.com/PredixDev/izon/1.1.0/izon2.sh"
 #ASSET_MODEL="-amrmd predix-ui-seed/server/sample-data/predix-asset/asset-model-metadata.json predix-ui-seed/server/sample-data/predix-asset/asset-model.json"
 SCRIPT="-script build-basic-app.sh -script-readargs build-basic-app-readargs.sh"
 VERSION_JSON="version.json"
@@ -60,12 +63,17 @@ REPO_NAME=predix-edge-sample-scaler-nodejs
 SCRIPT_NAME="edge-starter-sample-app.sh"
 APP_DIR="edge-sample-nodejs"
 APP_NAME="Predix Front End Basic App - Node.js Express with UAA, Asset, Time Series"
+GITHUB_RAW="https://raw.githubusercontent.com/PredixDev"
 TOOLS="Cloud Foundry CLI, Git, Node.js, Predix CLI"
 TOOLS_SWITCHES="--cf --git --nodejs --predixcli"
 
+# Process switches
 local_read_args $@
-IZON_SH="https://raw.githubusercontent.com/PredixDev/izon/$BRANCH/izon.sh"
-VERSION_JSON_URL=https://raw.githubusercontent.com/PredixDev/$REPO_NAME/$BRANCH/version.json
+
+#variables after processing switches
+SCRIPT_LOC="$GITHUB_RAW/$REPO_NAME/$BRANCH/scripts/$SCRIPT_NAME"
+VERSION_JSON_URL=$GITHUB_RAW/$REPO_NAME/$BRANCH/version.json
+
 if [[ "$SKIP_PREDIX_SERVICES" == "true" ]]; then
   QUICKSTART_ARGS="$QUICKSTART_ARGS -p $SCRIPT"
 else
@@ -76,7 +84,7 @@ function check_internet() {
   set +e
   echo ""
   echo "Checking internet connection..."
-  curl "http://google.com" > /dev/null 2>&1
+  curl "http://github.com" > /dev/null 2>&1
   if [ $? -ne 0 ]; then
     echo "Unable to connect to internet, make sure you are connected to a network and check your proxy settings if behind a corporate proxy"
     echo "If you are behind a corporate proxy, set the 'http_proxy' and 'https_proxy' environment variables.   Please read this tutorial for detailed info about setting your proxy https://www.predix.io/resources/tutorials/tutorial-details.html?tutorial_id=1565"
@@ -100,12 +108,12 @@ function init() {
 
   check_internet
 
-
   #get the script that reads version.json
   eval "$(curl -s -L $IZON_SH)"
-
+  getUsingCurl $SCRIPT_LOC
+  chmod 755 $SCRIPT_NAME;
   getVersionFile
-  getLocalSetupFuncs
+  getLocalSetupFuncs $GITHUB_RAW
 }
 
 if [[ $PRINT_USAGE == 1 ]]; then
@@ -169,6 +177,7 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
   docker service ls -f "name=predix-edge-broker_predix-edge-broker"
 
   docker stack deploy --with-registry-auth --compose-file docker-compose-edge-broker.yml predix-edge-broker
+  sleep 10
   if [[  $(docker service ls -f "name=predix-edge-broker" | grep 0/1 | wc -l) == "1" ]]; then
     docker service ls
     echo 'Error: One of the predix-edge-broker services did not launch'
@@ -185,6 +194,7 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
 
   docker build -t edge-to-cloud-filter:1.0.0 . --build-arg http_proxy --build-arg https_proxy
   docker stack deploy --compose-file docker-compose.yml edge-to-cloud
+  sleep 10
   if [[  $(docker service ls -f "name=edge-to-cloud" | grep 0/1 | wc -l) == "1" ]]; then
     docker service ls
     echo 'Error: One of the edge-to-cloud services did not launch'
