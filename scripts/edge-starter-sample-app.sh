@@ -172,6 +172,9 @@ if [[ "$RUN_QUICKSTART" == "1" ]]; then
   pwd
   cat data/access_token
 
+  mkdir data/store_forward_queue
+  chmod 777 data/store_forward_queue
+  
   pwd
   ls
   docker service ls -f "name=predix-edge-broker_predix-edge-broker"
