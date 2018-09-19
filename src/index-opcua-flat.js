@@ -25,8 +25,6 @@ client.on('message', function (topic, message) {
 
   console.log("message recieved from " + predix_edge_broker+" : " + message.toString());
 
-  //*** all app logic goes below here ***
-
   //read the message into a json object
   var item = JSON.parse(message);
 
