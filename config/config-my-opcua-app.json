@@ -3,7 +3,8 @@
     	"config" : {
     	    "pubTopic" : "timeseries_data",
     	    "subTopic" : "idpd_timeseries",
-    	    "tagName"    : "Alex_bad_tag"
+    	    "tagName"    : "Alex_bad_tag",
+	    "multiplier" : 100,
     	}
     }
 }
