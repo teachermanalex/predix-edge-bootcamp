@@ -12,6 +12,7 @@ let configObj = JSON.parse(fs.readFileSync(config_file_name));
 let subTopic = configObj.my_opcua_app.config.subTopic;
 let pubTopic = configObj.my_opcua_app.config.pubTopic;
 let tagName = configObj.my_opcua_app.config.tagName;
+let multiplier = configObj.my_opcua_app.config.multiplier;
 
 console.log("config file " + config_file_name + "read and parsed");
 console.log("subTopic=" + subTopic + ", pubTopic=" + pubTopic + ", tagName=" + tagName);
@@ -52,8 +53,8 @@ client.on('message', function (topic, message) {
     return;
   }
 
-  //scale tagName's value * 100
-  item.data[tagName].val = value * 100;
+  //scale tagName's value * multiplier value from config file
+  item.data[tagName].val = value * multiplier;
 
   //Stringify the object for publishing
   var scaled_item = JSON.stringify(item);
@@ -61,7 +62,7 @@ client.on('message', function (topic, message) {
   //publish the OPCUA object back to the broker on the topic that
   //the cloud-gateway container is subscribing to
   //*** EDIT THIS to put the tag your timeseries is reading from here ***
-  client.publish("pub_topic", scaled_item);
+  client.publish(pubTopic, scaled_item);
 
   console.log("published scaled item to predix-edge-broker: " + scaled_item);
 });
