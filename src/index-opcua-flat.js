@@ -1,10 +1,13 @@
 // load the mqtt package so we can communicate with the app containers
 var mqtt = require('mqtt')
 
+// the opc-ua tag we will look for to scale
+// *** EDIT THIS to put your tag name here. ***
+var tagName = 'your-tag';
+
 console.log("app starting");
 
-// connect to the predix-edge-broker - use an environment variable if
-// developing locally
+//connect to the predix-edge-broker - use an environment variable if devloping locally
 var predix_edge_broker = process.env.predix_edge_broker || 'predix-edge-broker';
 
 console.log("mqtt connecting to " + predix_edge_broker);
@@ -17,33 +20,33 @@ client.on('connect', function () {
   client.subscribe('subscribe-topic');
 });
 
-// handle each message as it is recieved
+//handle each message as it is recieved
 client.on('message', function (topic, message) {
 
   console.log("message recieved from " + predix_edge_broker+" : " + message.toString());
 
-  // read the message into a json object
+  //read the message into a json object
   var item = JSON.parse(message);
 
-  // Extract the value from the OPCUA Flat data object
-  // message format:
-  // {"body":[ {"attributes": {"device_id" : "Predix_Edge_Device_ID"},
-  //            "datapoints": [[22525242343243,44,3]],
-  //            "name"      : "Timeseries_Tag_Name" } 
-  //         ],
-  //  "messageID":"flex-pipe"}
-  
-  // scale tagName's value * 100
-  let value = item.body[0].datapoints[0][1];
-  item.body[0].datapoints[0][1] = value * 100;
+  //extract the value from the OPCUA Flat data object
+  //format is:
+  //   { "data" : {
+  //   		    "tagName1" : { "type" : "typestr", "val" : VALUE },
+  //   		    "tagname2" : { "type" : "typestr", "val" : VALUE }
+  //   		    ...
+  //   		  }
+  //   }
+  var value = item.data[tagName].val;
 
-  // Stringify the object for publishing 
+  //scale tagName's value * 100
+  item.data[tagName].val = value * 100;
+
+  //Stringify the object for publishing
   var scaled_item = JSON.stringify(item);
 
-  // publish the OPCUA object back to the broker on the topic that
-  // the cloud-gateway container is subscribing to
-  // *** EDIT THIS: Put the topic your timeseries cloud gateway expects
-  //                to receive here ***
+  //publish the OPCUA object back to the broker on the topic that
+  //the cloud-gateway container is subscribing to
+  //*** EDIT THIS to put the tag your timeseries is reading from here ***
   client.publish("timeseries_data", scaled_item);
 
   console.log("published scaled item to predix-edge-broker: " + scaled_item);
