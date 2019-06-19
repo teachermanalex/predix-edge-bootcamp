@@ -1,0 +1,7 @@
+version: "3.0"
+
+services:
+  nodejs-server:
+    image: "simple-nodejs-server"
+    ports:
+      - "3000:3000"
