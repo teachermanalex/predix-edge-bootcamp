@@ -1,8 +1,9 @@
 # start with the Predix Edge base alpine image
-FROM dtr.predix.io/predix-edge/alpine-amd64
+#FROM dtr.predix.io/predix-edge/alpine-amd64
+FROM alpine:3.9
 
 #install nodejs into the base image
-RUN apk update && apk add nodejs
+RUN apk update && apk add nodejs && apk add npm
 
 # Create app directory in the image
 WORKDIR /usr/src
