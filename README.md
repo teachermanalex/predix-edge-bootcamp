@@ -1,6 +1,9 @@
 ## This is the code that accompanies GE Digital's Training Course: Predix Edge Design & Connectivity Boot Camp
 If you are viewing this README file outside of the context of the course, please contact <PredixTraining@ge.com> to inquire about the course materials.
 
+## Predix Edge Version
+The code is this repo has been tested with Predix Edge OS v2.2.1.  It is **incompatible** with Predix Edge OS v2.3 as the messaging format has changed.
+
 ## Predix Edge Sample Scaling App in Node.js
 
 The intent of this app is to illustrate building and deploying a basic Predix Edge app that communicates with other common Predix Edge comtainer services.  The functionality is intended to be extremely simple with the focus being on the fundamentals of constructing the app.
